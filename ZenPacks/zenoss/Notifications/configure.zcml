@@ -5,9 +5,15 @@
 
     <utility
         factory=".actions.UserCommandAction"
-        provides=".interfaces.IUserCommandActionContentInfo"
+        provides="Products.ZenModel.interfaces.IAction"
         name="user_command"
         />
+
+    <adapter provides=".interfaces.IUserCommandActionContentInfo"
+             for="Products.ZenModel.NotificationSubscription.NotificationSubscription"
+             factory=".info.UserActionContentInfo"
+             />
+
 
 </configure>
 
