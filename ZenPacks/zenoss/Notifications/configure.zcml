@@ -4,7 +4,7 @@
     xmlns:zcml="http://namespaces.zope.org/zcml">
 
     <utility
-        factory=".actions.UserCommandAction"
+        factory=".actions.usercommand.UserCommandAction"
         provides="Products.ZenModel.interfaces.IAction"
         name="user_command"
         />
@@ -14,6 +14,16 @@
              factory=".info.UserActionContentInfo"
              />
 
+    <utility
+        factory=".actions.altemailhost.AltEmailHostAction"
+        provides="Products.ZenModel.interfaces.IAction"
+        name="altemailhost"
+        />
+
+    <adapter provides=".interfaces.IAltEmailHostActionContentInfo"
+             for="Products.ZenModel.NotificationSubscription.NotificationSubscription"
+             factory=".info.AltEmailHostActionContentInfo"
+             />
 
 </configure>
 
