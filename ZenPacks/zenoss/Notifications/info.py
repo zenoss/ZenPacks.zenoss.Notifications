@@ -9,9 +9,15 @@ import Globals
 
 from zope.interface import implements
 
-from Products.Zuul.infos.actions import CommandActionContentInfo, EmailActionContentInfo, ActionFieldProperty
+from Products.Zuul.infos.actions import (
+      CommandActionContentInfo, EmailActionContentInfo, ActionFieldProperty,
+      SnmpTrapActionContentInfo,
+)
 
-from ZenPacks.zenoss.Notifications.interfaces import IUserCommandActionContentInfo, IAltEmailHostActionContentInfo
+from ZenPacks.zenoss.Notifications.interfaces import (
+    IUserCommandActionContentInfo, IAltEmailHostActionContentInfo,
+    IConfigurableSnmpTrapActionContentInfo
+)
 
 
 class UserActionContentInfo(CommandActionContentInfo):
@@ -29,4 +35,12 @@ class AltEmailHostActionContentInfo(EmailActionContentInfo):
     useTls = ActionFieldProperty(IAltEmailHostActionContentInfo, 'useTls')
     user = ActionFieldProperty(IAltEmailHostActionContentInfo, 'user')
     password = ActionFieldProperty(IAltEmailHostActionContentInfo, 'password')
+
+
+class ConfigurableSnmpTrapActionContentInfo(SnmpTrapActionContentInfo):
+    implements(IConfigurableSnmpTrapActionContentInfo)
+
+    community = ActionFieldProperty(IConfigurableSnmpTrapActionContentInfo, 'community')
+    version = ActionFieldProperty(IConfigurableSnmpTrapActionContentInfo, 'version')
+    port = ActionFieldProperty(IConfigurableSnmpTrapActionContentInfo, 'port')
 

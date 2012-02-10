@@ -15,7 +15,6 @@ from email.MIMEText import MIMEText
 from email.MIMEMultipart import MIMEMultipart
 from email.Utils import formatdate
 
-
 from Products.ZenUtils.Utils import sendEmail
 from Products.ZenModel.interfaces import IAction
 from Products.ZenModel.actions import EmailAction, \

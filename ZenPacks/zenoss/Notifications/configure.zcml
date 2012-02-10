@@ -25,5 +25,16 @@
              factory=".info.AltEmailHostActionContentInfo"
              />
 
+    <utility
+        factory=".actions.configurablesnmptrap.ConfigurableSnmpTrapAction"
+        provides="Products.ZenModel.interfaces.IAction"
+        name="configurabletrapaction"
+        />
+
+    <adapter provides=".interfaces.IConfigurableSnmpTrapActionContentInfo"
+             for="Products.ZenModel.NotificationSubscription.NotificationSubscription"
+             factory=".info.ConfigurableSnmpTrapActionContentInfo"
+             />
+
 </configure>
 

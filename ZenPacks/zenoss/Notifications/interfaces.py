@@ -6,10 +6,13 @@
 
 import Globals
 
+from zope.schema.vocabulary import SimpleVocabulary
+
 from Products.Zuul.form import schema
 from Products.Zuul.utils import ZuulMessageFactory as _t
 from Products.Zuul.interfaces.actions import (
-   ICommandActionContentInfo, IEmailActionContentInfo
+   ICommandActionContentInfo, IEmailActionContentInfo,
+   ISnmpTrapActionContentInfo,
 )
 
 
@@ -53,5 +56,27 @@ class IAltEmailHostActionContentInfo(IEmailActionContentInfo):
     password = schema.Text(
         title       = _t(u'SMTP Password (blank for none)'),
         description = _t(u'Use this only if authentication is required.'),
+    )
+
+
+class IConfigurableSnmpTrapActionContentInfo(ISnmpTrapActionContentInfo):
+
+    community = schema.Text(
+        title       = _t(u'SNMP Community'),
+        description = _t(u'SNMP authentication string.'),
+        default = _t(u'public')
+    )
+
+    version = schema.Choice(
+        title       = _t(u'SNMP Version'),
+        description = _t(u'SNMP trap protocol version.'),
+        vocabulary  = SimpleVocabulary.fromValues(['v1', 'v2c']),
+        default = _t(u'v1')
+    )
+
+    port = schema.Int(
+        title       = _t(u'SNMP Port (usually 162)'),
+        description = _t(u'Port number used by the SNMP trap receiver process.'),
+        default = 162
     )
 
