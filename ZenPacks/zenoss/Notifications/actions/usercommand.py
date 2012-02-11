@@ -6,50 +6,51 @@
 
 import logging
 log = logging.getLogger("zen.useraction.actions")
-from copy import copy
 
 import Globals
 
 from zope.interface import implements
 
+from Products.ZenModel.UserSettings import GroupSettings
 from Products.ZenUtils.guid.guid import GUIDManager
 from Products.ZenUtils.ProcessQueue import ProcessQueue
 
-from Products.ZenModel.interfaces import IAction, IProvidesEmailAddresses
-from Products.ZenModel.actions import CommandAction, EventCommandProtocol, \
+from Products.ZenModel.interfaces import IAction
+from Products.ZenModel.actions import IActionBase, TargetableAction, EventCommandProtocol, \
      processTalSource, _signalToContextDict
 
 from ZenPacks.zenoss.Notifications.interfaces import IUserCommandActionContentInfo
 
 
-class UserCommandAction(CommandAction):
+class UserCommandAction(IActionBase, TargetableAction):
     implements(IAction)
 
     id = 'user_command'
     name = 'User Command'
     actionContentInfo = IUserCommandActionContentInfo
 
-    shouldExecuteInBatch = True
+    shouldExecuteInBatch = False
 
     def configure(self, options):
-        super(CommandAction, self).configure(options)
+        super(UserCommandAction, self).configure(options)
         self.processQueue = ProcessQueue(options.get('maxCommands', 10))
         self.processQueue.start()
 
     def setupAction(self, dmd):
         self.guidManager = GUIDManager(dmd)
+        self.dmd = dmd
 
-    def executeBatch(self, notification, signal, targets):
+    def executeOnTarget(self, notification, signal, target):
         self.setupAction(notification.dmd)
 
-        log.debug('Executing action: Command')
+        log.debug('Executing action: %s on %s', self.name, target)
 
         if signal.clear:
             command = notification.content['clear_body_format']
         else:
             command = notification.content['body_format']
 
-        log.debug('Executing this command: %s' % command)
+        log.debug('Executing this command: %s', command)
 
         actor = signal.event.occurrence[0].actor
         device = None
@@ -74,14 +75,9 @@ class UserCommandAction(CommandAction):
         if environ.get('clearEvt', None):
             environ['clearEvt'] = self._escapeEvent(environ['clearEvt'])
 
+        environ['user'] = getattr(self.dmd.ZenUsers, target, None)
 
-        for target in targets:
-            self.executeSingleTarget(command, environ, notification, target)
-
-    def executeSingleTarget(self, command, environ, notification, target):
-        environcopy = copy(environ)
-        environcopy.update( {'user':target, 'group':target} )
-        command = processTalSource(command, **environcopy)
+        command = processTalSource(command, **environ)
         log.debug('Executing this compiled command: "%s"' % command)
 
         _protocol = EventCommandProtocol(command)
@@ -97,16 +93,39 @@ class UserCommandAction(CommandAction):
         )
 
     def getActionableTargets(self, target):
-        if IProvidesEmailAddresses.providedBy(target):
-            return target
+        ids = [target.id]
+        if isinstance(target, GroupSettings):
+            ids = target.getMemberUserIds()
+        return ids
 
     def updateContent(self, content=None, data=None):
-        super(UserCommandAction, self).updateContent(content, data)
-
         updates = dict()
-        properties = ['user_env_format']
+
+        properties = ['body_format', 'clear_body_format', 'action_timeout', 
+                      'user_env_format']
         for k in properties:
             updates[k] = data.get(k)
 
         content.update(updates)
+
+    def _escapeEvent(self, evt):
+        """
+        Escapes the relavent fields of an event context for event commands.
+        """
+        if evt.message:
+            evt.message = self._wrapInQuotes(evt.message)
+        if evt.summary:
+            evt.summary = self._wrapInQuotes(evt.summary)
+        return evt
+
+    def _wrapInQuotes(self, msg):
+        """
+        Wraps the message in quotes, escaping any existing quote.
+
+        Before:  How do you pronounce "Zenoss"?
+        After:  "How do you pronounce \"Zenoss\"?"
+        """
+        QUOTE = '"'
+        BACKSLASH = '\\'
+        return ''.join((QUOTE, msg.replace(QUOTE, BACKSLASH + QUOTE), QUOTE))
 
