@@ -95,7 +95,7 @@ class UserCommandAction(IActionBase, TargetableAction):
     def getActionableTargets(self, target):
         ids = [target.id]
         if isinstance(target, GroupSettings):
-            ids = target.getMemberUserIds()
+            ids = [x.id for x in target.getMemberUserSettings()]
         return ids
 
     def updateContent(self, content=None, data=None):

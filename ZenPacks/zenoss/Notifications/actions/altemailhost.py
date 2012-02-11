@@ -67,7 +67,6 @@ class AltEmailHostAction(EmailAction):
         useTls = notification.content['useTls']
         email_from = notification.content['email_from']
 
-
         email_message['Subject'] = subject
         email_message['From'] = email_from
         email_message['To'] = ','.join(targets)

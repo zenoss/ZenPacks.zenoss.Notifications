@@ -6,6 +6,7 @@
 
 import logging
 log = logging.getLogger("zen.useraction.actions")
+from socket import getaddrinfo
 
 import Globals
 
@@ -116,12 +117,16 @@ class ConfigurableSnmpTrapAction(SNMPTrapAction):
         session = self._sessions.get(destination, None)
         if session is None:
             log.debug("Creating SNMP trap session to %s", destination)
+
+            # Test that the hostname and port are sane.
+            # This generates an ugly traceback
+            getaddrinfo(traphost, port)
+
             session = netsnmp.Session((
                 '-%s' % version,
                 '-c', community,
-                '%s:%' % (traphost, port))
+                '%s:%s' % (traphost, port))
             )
-            # FIXME: What happens if the IP isn't reachable or is insane?
             session.open()
             self._sessions[destination] = session
 
