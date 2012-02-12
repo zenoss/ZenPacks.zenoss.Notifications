@@ -16,7 +16,8 @@ from pynetsnmp import netsnmp
 
 from Products.ZenUtils.guid.guid import GUIDManager
 from Products.ZenModel.interfaces import IAction
-from Products.ZenModel.actions import SNMPTrapAction, _signalToContextDict
+from Products.ZenModel.actions import SNMPTrapAction, _signalToContextDict, ActionExecutionException
+
 
 from ZenPacks.zenoss.Notifications.interfaces import IConfigurableSnmpTrapActionContentInfo
 
@@ -119,13 +120,15 @@ class ConfigurableSnmpTrapAction(SNMPTrapAction):
             log.debug("Creating SNMP trap session to %s", destination)
 
             # Test that the hostname and port are sane.
-            # This generates an ugly traceback
-            getaddrinfo(traphost, port)
+            try:
+                getaddrinfo(traphost, port)
+            except Exception:
+                raise ActionExecutionException("The destination %s is not resolvable." % destination)
 
             session = netsnmp.Session((
                 '-%s' % version,
                 '-c', community,
-                '%s:%s' % (traphost, port))
+                destination)
             )
             session.open()
             self._sessions[destination] = session

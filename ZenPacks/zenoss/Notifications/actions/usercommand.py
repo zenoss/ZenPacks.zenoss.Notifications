@@ -17,7 +17,7 @@ from Products.ZenUtils.ProcessQueue import ProcessQueue
 
 from Products.ZenModel.interfaces import IAction
 from Products.ZenModel.actions import IActionBase, TargetableAction, EventCommandProtocol, \
-     processTalSource, _signalToContextDict
+     processTalSource, _signalToContextDict, ActionExecutionException
 
 from ZenPacks.zenoss.Notifications.interfaces import IUserCommandActionContentInfo
 
@@ -77,9 +77,12 @@ class UserCommandAction(IActionBase, TargetableAction):
 
         environ['user'] = getattr(self.dmd.ZenUsers, target, None)
 
-        command = processTalSource(command, **environ)
-        log.debug('Executing this compiled command: "%s"' % command)
+        try:
+            command = processTalSource(command, **environ)
+        except Exception:
+            raise ActionExecutionException('Unable to perform TALES evaluation on "%s" -- is there an unescaped $?' % command)
 
+        log.debug('Executing this compiled command: "%s"' % command)
         _protocol = EventCommandProtocol(command)
 
         log.debug('Queueing up command action process.')
