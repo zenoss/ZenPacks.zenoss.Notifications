@@ -94,7 +94,7 @@ class ConfigurableSnmpTrapAction(SNMPTrapAction):
 
         session = self._getSession(notification.content)
         if session is not None:
-            self.postProcessVarBinds(varbinds, notification.dmd)
+            self.postProcessVarBinds(varbinds, data, notification.dmd)
             session.sendTrap(baseOID + '.0.0.1', varbinds=varbinds)
 
     def updateContent(self, content=None, data=None):
@@ -135,6 +135,6 @@ class ConfigurableSnmpTrapAction(SNMPTrapAction):
 
         return session
 
-    def postProcessVarBinds(self, varbinds, dmd):
+    def postProcessVarBinds(self, varbinds, data, dmd):
         pass
 
