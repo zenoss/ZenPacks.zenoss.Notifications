@@ -81,21 +81,52 @@ class ConfigurableSnmpTrapAction(SNMPTrapAction):
            'event_class_mapping_uuid':      (33, event)
            }
 
-        varbinds = []
-        for field, oidspec in sorted(fields.items(), key=lambda x: x[1][0]):
+        eventDict = self.creatEventDict(fields, event)
+        self.processEventDict(eventDict, data, notification.dmd)
+        varbinds = self.makeVarBinds(baseOID, fields, eventDict)
+
+        session = self._getSession(notification.content)
+        session.sendTrap(baseOID + '.0.0.1', varbinds=varbinds)
+
+    def creatEventDict(self, fields, event):
+        """
+        Create an event dictionary suitable for Python evaluation.
+        """
+        eventDict = {}
+        for field, oidspec in fields.items():
             i, source = oidspec
             if source == event.details:
                 val = source.get(field, '')
             else:
                 val = getattr(source, field, '')
+            eventDict[field] = val
+        return eventDict
+
+    def processEventDict(self, eventDict, data, dmd):
+        """
+        Integration hook
+        """
+        pass
+
+    def makeVarBinds(self, baseOID, fields, eventDict):
+        """
+        Make the SNMP variable bindings in numeric order.
+        """
+        intValues = (9, 10, 26, 27)
+        varbinds = []
+        for field, oidspec in sorted(fields.items(), key=lambda x: x[1][0]):
+            i, source = oidspec
+            val = eventDict.get(field, '')
             if isinstance(val, (list, tuple, set)):
                 val = '|'.join(val)
-            varbinds.append(("%s.%d" % (baseOID,i), 's', str(val)))
 
-        session = self._getSession(notification.content)
-        if session is not None:
-            varbinds = self.postProcessVarBinds(varbinds, data, notification.dmd)
-            session.sendTrap(baseOID + '.0.0.1', varbinds=varbinds)
+            # Create the binding
+            oid = "%s.%d" % (baseOID, i)
+            oidType = 's' if i not in intValues else 'i'
+            val = str(val) if i not in intValues else val
+
+            varbinds.append( (oid, oidType, val) )
+        return varbinds
 
     def updateContent(self, content=None, data=None):
         content['action_destination'] = data.get('action_destination')
@@ -134,7 +165,4 @@ class ConfigurableSnmpTrapAction(SNMPTrapAction):
             self._sessions[destination] = session
 
         return session
-
-    def postProcessVarBinds(self, varbinds, data, dmd):
-        return varbinds
 
