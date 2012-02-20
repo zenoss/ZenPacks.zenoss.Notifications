@@ -54,7 +54,7 @@ class IAltEmailHostActionContentInfo(IEmailActionContentInfo):
         description = _t(u'Use this only if authentication is required.'),
     )
 
-    password = schema.Text(
+    password = schema.Password(
         title       = _t(u'SMTP Password (blank for none)'),
         description = _t(u'Use this only if authentication is required.'),
     )

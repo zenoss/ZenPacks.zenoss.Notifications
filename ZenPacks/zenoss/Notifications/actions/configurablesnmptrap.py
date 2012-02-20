@@ -123,7 +123,8 @@ class ConfigurableSnmpTrapAction(SNMPTrapAction):
             # Create the binding
             oid = "%s.%d" % (baseOID, i)
             oidType = 's' if i not in intValues else 'i'
-            val = str(val) if i not in intValues else val
+            # No matter what the OID data type, send in strings as that's what is expected
+            val = str(val)
 
             varbinds.append( (oid, oidType, val) )
         return varbinds
@@ -132,7 +133,7 @@ class ConfigurableSnmpTrapAction(SNMPTrapAction):
         content['action_destination'] = data.get('action_destination')
         content['community'] = data.get('community')
         content['version'] = data.get('version')
-        content['port'] = data.get('port')
+        content['port'] = int(data.get('port'))
 
     def _getSession(self, content):
         traphost = content['action_destination']
