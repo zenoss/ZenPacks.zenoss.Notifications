@@ -5,7 +5,7 @@
 NAME = "ZenPacks.zenoss.Notifications"
 VERSION = "1.0.1"
 AUTHOR = "Zenoss Professional Services"
-LICENSE = ""
+LICENSE = "GPLv2"
 NAMESPACE_PACKAGES = ['ZenPacks', 'ZenPacks.zenoss']
 PACKAGES = ['ZenPacks', 'ZenPacks.zenoss', 'ZenPacks.zenoss.Notifications']
 INSTALL_REQUIRES = []
